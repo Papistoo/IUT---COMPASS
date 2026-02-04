@@ -5,7 +5,7 @@ import { getAuth } from "firebase/auth";
 // Récupération des variables d'environnement (Vite)
 // IMPORTANT : Les clés réelles ne sont PAS ici.
 // Elles doivent être configurées dans l'interface de votre hébergeur (Netlify : Site settings > Environment variables)
-// ou dans un fichier .env local pour le développement.
+// ou dans un fichier .env local pour le développement (qui doit être ignoré par git).
 const env = (import.meta as any).env;
 
 const firebaseConfig = {
@@ -20,10 +20,10 @@ const firebaseConfig = {
 // Validation de sécurité : Vérifie si les clés sont présentes
 // Cela aide à diagnostiquer les problèmes lors du déploiement
 if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
-  console.error(
-    "%c ERREUR CONFIGURATION FIREBASE ",
-    "background: red; color: white; font-weight: bold; padding: 4px;",
-    "Les clés API sont manquantes. Assurez-vous de les avoir ajoutées dans les 'Environment Variables' de Netlify."
+  console.warn(
+    "%c ATTENTION CONFIGURATION FIREBASE ",
+    "background: orange; color: white; font-weight: bold; padding: 4px;",
+    "Les clés API semblent manquantes. Assurez-vous de les avoir ajoutées dans les 'Environment Variables' de Netlify."
   );
 }
 
