@@ -1,0 +1,44 @@
+
+{
+  "id": "iut-compass-tahoua",
+  "short_name": "IUT-COMPASS",
+  "name": "IUT-COMPASS | IUT de Tahoua",
+  "description": "Plateforme numérique d'orientation et de pilotage pour l'Institut Universitaire de Technologie.",
+  "icons": [
+    {
+      "src": "https://udh.edu.ne/public/img/university/uploads/domains/1721405330.jpg",
+      "type": "image/jpeg",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://udh.edu.ne/public/img/university/uploads/domains/1721405330.jpg",
+      "type": "image/jpeg",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#ffffff",
+  "background_color": "#ffffff",
+  "orientation": "portrait",
+  "scope": "/",
+  "categories": ["education", "productivity"],
+  "screenshots": [
+    {
+      "src": "https://udh.edu.ne/public/img/university/uploads/domains/1721405330.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "Écran d'accueil"
+    },
+    {
+      "src": "https://udh.edu.ne/public/img/university/uploads/domains/1721405330.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "Version Mobile"
+    }
+  ]
+}
