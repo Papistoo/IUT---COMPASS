@@ -124,33 +124,33 @@ const Presentation: React.FC<PresentationProps> = ({ onNavigate, searchQuery = '
 
       {/* 2. ACCÈS RAPIDES (VIE ÉTUDIANTE & TABLEAU D'AFFICHAGE) */}
       {showAccessCards && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* CARTE TABLEAU D'AFFICHAGE (NEW) */}
+        <div className="grid grid-cols-2 gap-3 md:gap-6">
+          {/* CARTE TABLEAU D'AFFICHAGE */}
           {onNavigate && (
              <div 
                onClick={() => onNavigate('NOTICE_BOARD')}
-               className="relative bg-slate-900 rounded-3xl p-8 shadow-xl cursor-pointer hover:shadow-2xl hover:scale-[1.01] transition-all group overflow-hidden border border-slate-700"
+               className="relative bg-slate-900 rounded-2xl md:rounded-3xl p-4 md:p-8 shadow-xl cursor-pointer hover:shadow-2xl hover:scale-[1.01] transition-all group overflow-hidden border border-slate-700 flex flex-col h-full min-h-[180px]"
              >
-               <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
+               <div className="absolute top-0 right-0 w-24 h-24 md:w-40 md:h-40 bg-white/5 rounded-full blur-2xl md:blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
                
-               <div className="relative z-10 flex justify-between items-start h-full flex-col">
-                 <div className="w-full flex justify-between items-start mb-6">
-                    <div className="bg-slate-800 p-3 rounded-xl text-yellow-400 border border-slate-700 group-hover:bg-yellow-400 group-hover:text-slate-900 transition-colors duration-300">
-                       <ClipboardList size={32} />
+               <div className="relative z-10 flex flex-col justify-between h-full w-full">
+                 <div className="w-full flex justify-between items-start mb-3 md:mb-6">
+                    <div className="bg-slate-800 p-2 md:p-3 rounded-lg md:rounded-xl text-yellow-400 border border-slate-700 group-hover:bg-yellow-400 group-hover:text-slate-900 transition-colors duration-300">
+                       <ClipboardList className="w-6 h-6 md:w-8 md:h-8" />
                     </div>
                     <div className="flex items-center space-x-1">
-                       <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-                       <span className="text-[10px] font-bold text-slate-400 uppercase">Nouveaux avis</span>
+                       <span className="w-1.5 h-1.5 md:w-2 md:h-2 bg-red-500 rounded-full animate-pulse"></span>
+                       <span className="hidden md:inline text-[10px] font-bold text-slate-400 uppercase">Nouveaux avis</span>
                     </div>
                  </div>
                  
                  <div>
-                    <h2 className="text-2xl font-bold text-white font-title mb-2 group-hover:text-yellow-400 transition-colors">Tableau d'Affichage</h2>
-                    <p className="text-slate-400 text-sm leading-relaxed mb-4">
-                       Consultez les notes de services officielles, résultats d'examens et communiqués administratifs.
+                    <h2 className="text-sm md:text-2xl font-bold text-white font-title mb-1 md:mb-2 group-hover:text-yellow-400 transition-colors leading-tight">Affichage</h2>
+                    <p className="text-slate-400 text-[10px] md:text-sm leading-relaxed mb-2 md:mb-4 line-clamp-2 md:line-clamp-none">
+                       Consultez les notes et résultats.
                     </p>
-                    <span className="text-sm font-bold text-white flex items-center group-hover:underline">
-                       Voir les documents <ChevronRight size={16} className="ml-1" />
+                    <span className="text-[10px] md:text-sm font-bold text-white flex items-center group-hover:underline">
+                       Voir <ChevronRight size={14} className="ml-1 md:w-4 md:h-4" />
                     </span>
                  </div>
                </div>
@@ -161,28 +161,28 @@ const Presentation: React.FC<PresentationProps> = ({ onNavigate, searchQuery = '
           {onNavigate && (
             <div 
               onClick={() => onNavigate('STUDENT_LIFE')}
-              className="relative bg-gradient-to-br from-indigo-600 to-purple-700 rounded-3xl p-8 shadow-xl cursor-pointer hover:shadow-2xl hover:scale-[1.01] transition-all group overflow-hidden"
+              className="relative bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl md:rounded-3xl p-4 md:p-8 shadow-xl cursor-pointer hover:shadow-2xl hover:scale-[1.01] transition-all group overflow-hidden flex flex-col h-full min-h-[180px]"
             >
-              <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
-              <div className="absolute bottom-0 left-0 w-40 h-40 bg-pink-500/20 rounded-full blur-2xl -ml-10 -mb-10 pointer-events-none"></div>
+              <div className="absolute top-0 right-0 w-32 h-32 md:w-64 md:h-64 bg-white/10 rounded-full blur-2xl md:blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+              <div className="absolute bottom-0 left-0 w-24 h-24 md:w-40 md:h-40 bg-pink-500/20 rounded-full blur-xl md:blur-2xl -ml-10 -mb-10 pointer-events-none"></div>
               
-              <div className="relative z-10 flex flex-col justify-between h-full">
-                 <div className="flex justify-between items-start mb-6">
-                    <div className="bg-white/10 p-3 rounded-xl text-white backdrop-blur-sm border border-white/20 group-hover:bg-white group-hover:text-purple-600 transition-colors duration-300">
-                       <Music size={32} />
+              <div className="relative z-10 flex flex-col justify-between h-full w-full">
+                 <div className="flex justify-between items-start mb-3 md:mb-6">
+                    <div className="bg-white/10 p-2 md:p-3 rounded-lg md:rounded-xl text-white backdrop-blur-sm border border-white/20 group-hover:bg-white group-hover:text-purple-600 transition-colors duration-300">
+                       <Music className="w-6 h-6 md:w-8 md:h-8" />
                     </div>
-                    <div className="inline-flex items-center px-2 py-1 rounded-full bg-white/20 border border-white/20 text-white text-[10px] font-bold backdrop-blur-md">
-                       <Heart size={10} className="mr-1 fill-white" /> Campus Life
+                    <div className="inline-flex items-center px-2 py-0.5 rounded-full bg-white/20 border border-white/20 text-white text-[9px] md:text-[10px] font-bold backdrop-blur-md">
+                       <Heart size={10} className="mr-1 fill-white" /> <span className="hidden md:inline">Campus</span>
                     </div>
                  </div>
 
                  <div>
-                   <h2 className="text-2xl font-bold text-white font-title mb-2">Vie Étudiante</h2>
-                   <p className="text-indigo-100 text-sm leading-relaxed mb-4">
-                     Clubs, voyages d'études, compétitions sportives (Coupe du Directeur) et vie associative.
+                   <h2 className="text-sm md:text-2xl font-bold text-white font-title mb-1 md:mb-2 leading-tight">Vie Étudiante</h2>
+                   <p className="text-indigo-100 text-[10px] md:text-sm leading-relaxed mb-2 md:mb-4 line-clamp-2 md:line-clamp-none">
+                     Clubs, sports & activités.
                    </p>
-                   <span className="text-sm font-bold text-white flex items-center group-hover:underline">
-                     Explorer les activités <ChevronRight size={16} className="ml-1" />
+                   <span className="text-[10px] md:text-sm font-bold text-white flex items-center group-hover:underline">
+                     Explorer <ChevronRight size={14} className="ml-1 md:w-4 md:h-4" />
                    </span>
                  </div>
               </div>

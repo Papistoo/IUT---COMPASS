@@ -171,6 +171,14 @@ const About: React.FC<AboutProps> = ({ onBack }) => {
          <div className="absolute top-0 right-0 w-80 h-80 bg-brand-500/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
          
          <div className="relative z-10">
+            <div className="flex justify-center mb-8">
+               <LazyImage 
+                  src="https://services.zerofiltre.tech/images/service_mobile_development.svg" 
+                  alt="Mobile Dev Illustration" 
+                  className="w-full max-w-xs h-auto object-contain"
+                  containerClassName="w-full max-w-xs"
+               />
+            </div>
             <h2 className="text-2xl font-bold font-title mb-8 text-center md:text-left">Pourquoi c'est important ?</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

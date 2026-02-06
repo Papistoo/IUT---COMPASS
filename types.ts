@@ -26,15 +26,32 @@ export interface FaqItem {
 // Notice Board Types
 export type NoticeCategory = 'URGENT' | 'PEDAGOGIE' | 'ADMINISTRATION' | 'BOURSES' | 'STAGES';
 
+export interface TimetableEntry {
+  day: string;
+  time: string;
+  ecue: string;
+  filiere: string;
+  room: string;
+  teacher: string;
+}
+
+export interface TimetableData {
+  level: 'L1' | 'L2' | 'L3';
+  entries: TimetableEntry[];
+  note?: string; // NB
+  headOfDept?: string;
+}
+
 export interface Notice {
   id: string;
   title: string;
   date: string;
   category: NoticeCategory;
-  content: string;
+  content: string; // Used for standard notices or summary
   fileSize?: string;
   isNew?: boolean;
   createdAt?: any; // Firestore Timestamp used for sorting
+  timetable?: TimetableData; // Optional complex structure for Timetables
 }
 
 // Flowchart Types

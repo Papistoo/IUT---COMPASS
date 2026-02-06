@@ -1,7 +1,8 @@
 
 
+
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Bell, Calendar, Download, FileText, Filter, Pin, Search, AlertTriangle, CheckCircle2, Clock, RefreshCw, X } from 'lucide-react';
+import { ArrowLeft, Bell, Calendar, Download, FileText, Filter, Pin, Search, AlertTriangle, CheckCircle2, Clock, RefreshCw, X, Table2 } from 'lucide-react';
 import { Notice } from '../types';
 
 // Firebase Imports
@@ -64,7 +65,7 @@ const NoticeBoard: React.FC<NoticeBoardProps> = ({ onBack, searchQuery = '' }) =
     const matchesFilter = filter === 'TOUT' || notice.category === filter;
     const matchesSearch = searchQuery === '' ||
                           notice.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          notice.content.toLowerCase().includes(searchQuery.toLowerCase());
+                          (notice.content && notice.content.toLowerCase().includes(searchQuery.toLowerCase()));
     return matchesFilter && matchesSearch;
   });
 
@@ -172,7 +173,7 @@ const NoticeBoard: React.FC<NoticeBoardProps> = ({ onBack, searchQuery = '' }) =
                     {notice.title}
                  </h3>
                  <p className="text-gray-600 text-sm leading-relaxed mb-6 flex-grow line-clamp-3">
-                    {notice.content}
+                    {notice.content || (notice.timetable ? "Emploi du temps - Voir le détail" : "")}
                  </p>
 
                  {/* Footer Actions */}
@@ -190,7 +191,12 @@ const NoticeBoard: React.FC<NoticeBoardProps> = ({ onBack, searchQuery = '' }) =
                     <button 
                        className="flex items-center text-brand-700 bg-brand-50 hover:bg-brand-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors"
                     >
-                       {notice.fileSize ? (
+                       {notice.timetable ? (
+                          <>
+                             <Table2 size={14} className="mr-1.5" /> 
+                             Voir EDT
+                          </>
+                       ) : notice.fileSize ? (
                           <>
                              <Download size={14} className="mr-1.5" /> 
                              {notice.fileSize}
@@ -237,7 +243,7 @@ const NoticeBoard: React.FC<NoticeBoardProps> = ({ onBack, searchQuery = '' }) =
            onClick={() => setSelectedNotice(null)}
         >
            <div 
-              className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200"
+              className={`bg-white rounded-2xl shadow-2xl w-full flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 ${selectedNotice.timetable ? 'max-w-4xl max-h-[90vh]' : 'max-w-2xl max-h-[85vh]'}`}
               onClick={(e) => e.stopPropagation()}
            >
               {/* Modal Header */}
@@ -261,14 +267,74 @@ const NoticeBoard: React.FC<NoticeBoardProps> = ({ onBack, searchQuery = '' }) =
               {/* Modal Content */}
               <div className="p-6 md:p-8 overflow-y-auto custom-scrollbar">
                  <h2 className="text-2xl font-bold text-gray-900 mb-6 font-title">{selectedNotice.title}</h2>
-                 <div className="prose prose-sm md:prose-base max-w-none text-gray-700 whitespace-pre-line leading-relaxed">
-                    {selectedNotice.content}
-                 </div>
+                 
+                 {/* Timetable Display Logic */}
+                 {selectedNotice.timetable ? (
+                    <div className="space-y-6">
+                       <div className="flex justify-between items-center bg-blue-50 p-4 rounded-xl border border-blue-100">
+                          <div>
+                             <span className="text-xs font-bold text-blue-500 uppercase tracking-wide">Niveau</span>
+                             <p className="text-xl font-bold text-blue-900">{selectedNotice.timetable.level}</p>
+                          </div>
+                          <div className="text-right">
+                             <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">Année Académique</span>
+                             <p className="text-sm font-bold text-gray-700">2025-2026</p>
+                          </div>
+                       </div>
+
+                       <div className="overflow-x-auto border border-gray-200 rounded-lg">
+                          <table className="min-w-full divide-y divide-gray-200">
+                             <thead className="bg-gray-50">
+                                <tr>
+                                   <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Jour</th>
+                                   <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Horaires</th>
+                                   <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">ECUE</th>
+                                   <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Filière</th>
+                                   <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Salle</th>
+                                   <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Enseignant</th>
+                                </tr>
+                             </thead>
+                             <tbody className="bg-white divide-y divide-gray-200 text-sm">
+                                {selectedNotice.timetable.entries.map((entry, idx) => (
+                                   <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                                      <td className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">{entry.day}</td>
+                                      <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{entry.time}</td>
+                                      <td className="px-4 py-3 font-bold text-brand-700">{entry.ecue}</td>
+                                      <td className="px-4 py-3 text-gray-600">{entry.filiere}</td>
+                                      <td className="px-4 py-3 text-gray-600">{entry.room}</td>
+                                      <td className="px-4 py-3 text-gray-600 italic">{entry.teacher}</td>
+                                   </tr>
+                                ))}
+                             </tbody>
+                          </table>
+                       </div>
+
+                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-100">
+                          {selectedNotice.timetable.note && (
+                             <div className="bg-yellow-50 p-4 rounded-xl border border-yellow-100 text-sm text-yellow-800">
+                                <span className="font-bold block mb-1">NB :</span>
+                                {selectedNotice.timetable.note}
+                             </div>
+                          )}
+                          {selectedNotice.timetable.headOfDept && (
+                             <div className="flex flex-col justify-end text-right p-4">
+                                <span className="text-xs font-bold text-gray-400 uppercase mb-1">Le Chef de Département</span>
+                                <p className="font-title font-bold text-gray-900 text-lg">{selectedNotice.timetable.headOfDept}</p>
+                             </div>
+                          )}
+                       </div>
+                    </div>
+                 ) : (
+                    /* Standard Content */
+                    <div className="prose prose-sm md:prose-base max-w-none text-gray-700 whitespace-pre-line leading-relaxed">
+                       {selectedNotice.content}
+                    </div>
+                 )}
               </div>
 
               {/* Modal Footer */}
               <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end">
-                 {selectedNotice.fileSize ? (
+                 {selectedNotice.fileSize && !selectedNotice.timetable ? (
                     <button className="flex items-center px-4 py-2 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 transition-colors shadow-lg shadow-brand-200">
                        <Download size={18} className="mr-2" />
                        Télécharger le document ({selectedNotice.fileSize})

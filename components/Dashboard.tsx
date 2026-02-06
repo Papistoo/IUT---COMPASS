@@ -1,12 +1,13 @@
 
 
+
 import React, { useState, useEffect } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as ReTooltip, ResponsiveContainer, 
 } from 'recharts';
-import { Lock, LogIn, TrendingUp, Users, AlertCircle, GraduationCap, Download, Filter, Settings, Edit2, X, Check, Eye, Plus, Trash2, Phone, MapPin, Clock, RefreshCw, Mail, GitMerge, MoveDown, MoveUp, Bell, Pin, Calendar, CheckCircle2, Info, LogOut, PieChart, LayoutDashboard, Shield, User, Handshake, MessageSquareQuote } from 'lucide-react';
+import { Lock, LogIn, TrendingUp, Users, AlertCircle, GraduationCap, Download, Filter, Settings, Edit2, X, Check, Eye, Plus, Trash2, Phone, MapPin, Clock, RefreshCw, Mail, GitMerge, MoveDown, MoveUp, Bell, Pin, Calendar, CheckCircle2, Info, LogOut, PieChart, LayoutDashboard, Shield, User, Handshake, MessageSquareQuote, Table2 } from 'lucide-react';
 import { DASHBOARD_STATS, FAQ_DATA, AVAILABLE_ICONS } from '../constants';
-import { FaqItem, Category, ProcessFlow, FlowStep, Notice, NoticeCategory, StatGlobal, StatEvolution, StatCycle, Teacher, Partner, Testimonial } from '../types';
+import { FaqItem, Category, ProcessFlow, FlowStep, Notice, NoticeCategory, StatGlobal, StatEvolution, StatCycle, Teacher, Partner, Testimonial, TimetableEntry } from '../types';
 
 // Firebase Imports
 import { db, auth } from '../firebaseConfig';
@@ -85,9 +86,11 @@ const Dashboard: React.FC = () => {
     category: 'ADMINISTRATION',
     content: '',
     fileSize: '',
-    isNew: true
+    isNew: true,
+    timetable: undefined
   };
   const [noticeFormData, setNoticeFormData] = useState<Notice>(initialNoticeFormState);
+  const [isTimetableMode, setIsTimetableMode] = useState(false);
 
   // Success Data Form States
   const [statGlobalForm, setStatGlobalForm] = useState<StatGlobal>({ id: '', label: '', value: '', iconName: 'TrendingUp', colorClass: 'text-emerald-600', bgClass: 'bg-emerald-50', order: 1 });
@@ -564,16 +567,80 @@ const Dashboard: React.FC = () => {
 
   const openNoticeModal = (mode: 'ADD' | 'EDIT', item?: Notice) => {
     setModalMode(mode);
-    if (mode === 'EDIT' && item) setNoticeFormData({ ...item });
-    else setNoticeFormData({ ...initialNoticeFormState, id: '', date: new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) });
+    if (mode === 'EDIT' && item) {
+       setNoticeFormData({ ...item });
+       setIsTimetableMode(!!item.timetable);
+    }
+    else {
+       setNoticeFormData({ ...initialNoticeFormState, id: '', date: new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) });
+       setIsTimetableMode(false);
+    }
     setIsModalOpen(true);
   };
 
+  // Handlers for Timetable Management
+  const handleAddTimetableRow = () => {
+     const currentEntries = noticeFormData.timetable?.entries || [];
+     const newEntry: TimetableEntry = { day: 'Lundi', time: '08h-10h', ecue: '', filiere: '', room: '', teacher: '' };
+     const newTimetable = { 
+        level: noticeFormData.timetable?.level || 'L1',
+        entries: [...currentEntries, newEntry],
+        note: noticeFormData.timetable?.note || '',
+        headOfDept: noticeFormData.timetable?.headOfDept || ''
+     };
+     setNoticeFormData({ ...noticeFormData, timetable: newTimetable });
+  };
+
+  const handleRemoveTimetableRow = (index: number) => {
+     if (!noticeFormData.timetable) return;
+     const newEntries = [...noticeFormData.timetable.entries];
+     newEntries.splice(index, 1);
+     setNoticeFormData({ ...noticeFormData, timetable: { ...noticeFormData.timetable, entries: newEntries } });
+  };
+
+  const handleTimetableChange = (index: number, field: keyof TimetableEntry, value: string) => {
+     if (!noticeFormData.timetable) return;
+     const newEntries = [...noticeFormData.timetable.entries];
+     newEntries[index] = { ...newEntries[index], [field]: value };
+     setNoticeFormData({ ...noticeFormData, timetable: { ...noticeFormData.timetable, entries: newEntries } });
+  };
+
+  const handleTimetableMetaChange = (field: 'level' | 'note' | 'headOfDept', value: string) => {
+     const currentTimetable = noticeFormData.timetable || { level: 'L1', entries: [], note: '', headOfDept: '' };
+     setNoticeFormData({ ...noticeFormData, timetable: { ...currentTimetable, [field]: value } });
+  };
+
   const handleSaveNotice = async () => {
-    if (!noticeFormData.title || !noticeFormData.content) return;
+    if (!noticeFormData.title || (!noticeFormData.content && !isTimetableMode)) {
+       // Allow saving without content ONLY if it is a timetable and has entries
+       if(isTimetableMode && (!noticeFormData.timetable || noticeFormData.timetable.entries.length === 0)) {
+          showToast("Veuillez remplir le tableau ou ajouter du contenu.", "error");
+          return;
+       }
+       if(!isTimetableMode && !noticeFormData.content) {
+          showToast("Le contenu est requis.", "error");
+          return;
+       }
+    }
+
     setIsLoadingData(true);
     const { id, ...dataToSave } = noticeFormData;
-    const payload = { ...dataToSave, createdAt: modalMode === 'ADD' ? Timestamp.now() : noticeFormData.createdAt };
+    
+    // Clean up data based on mode
+    let payload: any = { ...dataToSave, createdAt: modalMode === 'ADD' ? Timestamp.now() : noticeFormData.createdAt };
+    
+    if (isTimetableMode) {
+       // Ensure timetable object exists
+       if (!payload.timetable) {
+          payload.timetable = { level: 'L1', entries: [], note: '', headOfDept: '' };
+       }
+       // Content allows for search indexing or summary
+       if (!payload.content) payload.content = `Emploi du temps ${payload.timetable.level}`;
+    } else {
+       // Remove timetable if not in mode
+       delete payload.timetable;
+    }
+
     try {
        if (modalMode === 'ADD') {
           await addDoc(collection(db, "notices"), payload);
@@ -687,6 +754,7 @@ const Dashboard: React.FC = () => {
       {/* STATS VIEW */}
       {activeTab === 'STATS' && (
         <div className="space-y-6 animate-in slide-in-from-left-4 duration-300">
+          {/* ... existing stats content ... */}
           <div className="flex flex-col md:flex-row items-start md:items-center gap-3 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
              <div className="flex items-center justify-between w-full md:w-auto">
                 <div className="flex items-center text-gray-500 mr-2">
@@ -785,6 +853,7 @@ const Dashboard: React.FC = () => {
               ))}
            </div>
 
+           {/* ... existing admin sections ... */}
            {/* SECTION TEACHERS */}
            {activeAdminSection === 'TEACHERS' && (
              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
@@ -874,9 +943,10 @@ const Dashboard: React.FC = () => {
              </div>
            )}
 
-           {/* SECTION SUCCESS, FAQ, FLOWS, NOTICES (Existing) */}
+           {/* SECTION SUCCESS */}
            {activeAdminSection === 'SUCCESS' && (
              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                {/* ... existing success implementation ... */}
                 <div className="p-4 md:p-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center bg-gray-50/50 gap-4">
                   <div>
                       <div className="flex items-center gap-2">
@@ -896,6 +966,7 @@ const Dashboard: React.FC = () => {
                   </div>
                 </div>
                 <div className="p-0">
+                   {/* ... render items depending on successDataType ... */}
                    {successDataType === 'GLOBAL' && (
                       <div className="divide-y divide-gray-100">
                         {localStatsGlobal.map(item => (
@@ -947,6 +1018,7 @@ const Dashboard: React.FC = () => {
 
            {activeAdminSection === 'FAQ' && (
             <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+               {/* ... */}
                <div className="p-4 md:p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                   <div><div className="flex items-center gap-2"><h3 className="text-base md:text-lg font-bold text-gray-900">FAQ</h3>{isLoadingData && <RefreshCw size={16} className="text-brand-500 animate-spin" />}</div><p className="text-xs md:text-sm text-gray-500 hidden md:block">Gérez les questions et les réponses.</p></div>
                   <button onClick={() => openFaqModal('ADD')} disabled={isLoadingData} className="px-4 py-2 bg-brand-800 text-white text-xs md:text-sm font-bold rounded-xl hover:bg-brand-900 shadow-lg shadow-brand-900/20 transition-all flex items-center disabled:opacity-50"><Plus size={16} className="mr-1" /> Ajouter</button>
@@ -997,8 +1069,11 @@ const Dashboard: React.FC = () => {
                              {notice.isNew && (<div className="absolute top-2 right-2 md:top-4 md:right-4 md:static md:ml-2"><span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-800">NOUVEAU</span></div>)}
                              <div className="flex-1 w-full">
                                 <div className="flex items-center gap-2 mb-2"><span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md border ${notice.category === 'URGENT' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-gray-100 text-gray-500 border-gray-200'}`}>{notice.category}</span><span className="text-xs text-gray-400 flex items-center"><Calendar size={12} className="mr-1" /> {notice.date}</span></div>
-                                <h4 className="font-bold text-gray-900 text-sm md:text-lg">{notice.title}</h4>
-                                <p className="text-xs md:text-sm text-gray-500 mt-1 line-clamp-2">{notice.content}</p>
+                                <h4 className="font-bold text-gray-900 text-sm md:text-lg flex items-center">
+                                   {notice.title}
+                                   {notice.timetable && <Table2 size={16} className="ml-2 text-brand-600" />}
+                                </h4>
+                                <p className="text-xs md:text-sm text-gray-500 mt-1 line-clamp-2">{notice.content || (notice.timetable ? "Emploi du temps" : "")}</p>
                              </div>
                              <div className="flex gap-2 self-end md:self-auto"><button onClick={() => openNoticeModal('EDIT', notice)} className="p-2 md:p-3 text-gray-400 hover:text-brand-600 hover:bg-white border border-transparent hover:border-brand-200 hover:shadow-sm rounded-xl transition-all"><Edit2 size={16} className="md:w-5 md:h-5" /></button><button onClick={() => handleDeleteNotice(notice.id)} className="p-2 md:p-3 text-gray-400 hover:text-red-600 hover:bg-white border border-transparent hover:border-red-200 hover:shadow-sm rounded-xl transition-all"><Trash2 size={16} className="md:w-5 md:h-5" /></button></div>
                           </div>
@@ -1038,314 +1113,10 @@ const Dashboard: React.FC = () => {
               </div>
            )}
 
-           {/* PARTNER MODAL */}
-           {isModalOpen && activeAdminSection === 'PARTNERS' && (
-              <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-                 <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200 flex flex-col">
-                    <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50 sticky top-0 z-10"><h3 className="text-lg font-bold text-gray-900">{modalMode === 'ADD' ? 'Ajouter Partenaire' : 'Modifier Partenaire'}</h3><button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-200 rounded-full transition-colors"><X size={24} /></button></div>
-                    <div className="p-6 space-y-5">
-                       <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nom Partenaire</label><input type="text" value={partnerForm.name} onChange={e => setPartnerForm({...partnerForm, name: e.target.value})} className="w-full p-3 border rounded-xl text-sm" placeholder="Ex: UNICEF" /></div>
-                       <div>
-                             <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Type</label>
-                             <select value={partnerForm.type} onChange={e => setPartnerForm({...partnerForm, type: e.target.value as any})} className="w-full p-3 border rounded-xl text-sm">
-                                <option value="ENTREPRISE">Entreprise</option>
-                                <option value="ONG">ONG / ONS</option>
-                                <option value="INSTITUTION">Institution d'État</option>
-                                <option value="UNIVERSITE">Université</option>
-                             </select>
-                       </div>
-                       <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Description</label><textarea rows={3} value={partnerForm.description} onChange={e => setPartnerForm({...partnerForm, description: e.target.value})} className="w-full p-3 border rounded-xl text-sm" placeholder="Description du partenariat..." /></div>
-                       <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Site Web (Optionnel)</label><input type="text" value={partnerForm.website} onChange={e => setPartnerForm({...partnerForm, website: e.target.value})} className="w-full p-3 border rounded-xl text-sm" placeholder="https://..." /></div>
-                    </div>
-                    <div className="p-6 border-t border-gray-100 bg-gray-50 flex justify-end gap-3 sticky bottom-0 z-10"><button onClick={() => setIsModalOpen(false)} className="px-5 py-2.5 text-gray-600 font-bold hover:bg-gray-200 rounded-xl transition">Annuler</button><button onClick={() => handleGenericSave('partners', partnerForm, partnerForm.id, fetchPartners)} disabled={isLoadingData} className="px-5 py-2.5 bg-brand-600 text-white font-bold rounded-xl hover:bg-brand-700 shadow-lg transition flex items-center">{isLoadingData ? <RefreshCw size={18} className="animate-spin mr-2"/> : <Check size={18} className="mr-2" />} Enregistrer</button></div>
-                 </div>
-              </div>
-           )}
-
-           {/* TESTIMONIAL MODAL */}
-           {isModalOpen && activeAdminSection === 'TESTIMONIALS' && (
-              <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-                 <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200 flex flex-col">
-                    <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50 sticky top-0 z-10"><h3 className="text-lg font-bold text-gray-900">{modalMode === 'ADD' ? 'Ajouter Témoignage' : 'Modifier Témoignage'}</h3><button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-200 rounded-full transition-colors"><X size={24} /></button></div>
-                    <div className="p-6 space-y-5">
-                       <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nom Complet</label><input type="text" value={testimonialForm.name} onChange={e => setTestimonialForm({...testimonialForm, name: e.target.value})} className="w-full p-3 border rounded-xl text-sm" /></div>
-                       <div className="grid grid-cols-2 gap-4">
-                          <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Promotion</label><input type="text" value={testimonialForm.promo} onChange={e => setTestimonialForm({...testimonialForm, promo: e.target.value})} className="w-full p-3 border rounded-xl text-sm" placeholder="Promo 2020" /></div>
-                          <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Poste Actuel</label><input type="text" value={testimonialForm.role} onChange={e => setTestimonialForm({...testimonialForm, role: e.target.value})} className="w-full p-3 border rounded-xl text-sm" /></div>
-                       </div>
-                       <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Témoignage</label><textarea rows={4} value={testimonialForm.text} onChange={e => setTestimonialForm({...testimonialForm, text: e.target.value})} className="w-full p-3 border rounded-xl text-sm" placeholder="Message..." /></div>
-                    </div>
-                    <div className="p-6 border-t border-gray-100 bg-gray-50 flex justify-end gap-3 sticky bottom-0 z-10"><button onClick={() => setIsModalOpen(false)} className="px-5 py-2.5 text-gray-600 font-bold hover:bg-gray-200 rounded-xl transition">Annuler</button><button onClick={() => handleGenericSave('testimonials', testimonialForm, testimonialForm.id, fetchTestimonials)} disabled={isLoadingData} className="px-5 py-2.5 bg-brand-600 text-white font-bold rounded-xl hover:bg-brand-700 shadow-lg transition flex items-center">{isLoadingData ? <RefreshCw size={18} className="animate-spin mr-2"/> : <Check size={18} className="mr-2" />} Enregistrer</button></div>
-                 </div>
-              </div>
-           )}
-
-           {/* OTHER MODALS (SUCCESS, FAQ, FLOW, NOTICE) - Keep existing structure */}
-           {/* SUCCESS DATA MODAL */}
-           {isModalOpen && activeAdminSection === 'SUCCESS' && (
-              <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-                 <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200 flex flex-col">
-                    <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50 sticky top-0 z-10">
-                       <h3 className="text-lg font-bold text-gray-900">
-                          {modalMode === 'ADD' ? 'Ajouter' : 'Modifier'} ({successDataType})
-                       </h3>
-                       <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-200 rounded-full transition-colors">
-                          <X size={24} />
-                       </button>
-                    </div>
-
-                    <div className="p-6 space-y-5">
-                       {/* FORM FOR GLOBAL STATS */}
-                       {successDataType === 'GLOBAL' && (
-                          <>
-                             <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Label</label>
-                                <input type="text" value={statGlobalForm.label} onChange={e => setStatGlobalForm({...statGlobalForm, label: e.target.value})} className="w-full p-3 border rounded-xl text-sm" placeholder="Ex: Étudiants Inscrits" />
-                             </div>
-                             <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Valeur</label>
-                                <input type="text" value={statGlobalForm.value} onChange={e => setStatGlobalForm({...statGlobalForm, value: e.target.value})} className="w-full p-3 border rounded-xl text-sm font-bold" placeholder="Ex: 1,240" />
-                             </div>
-                             <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Icône</label>
-                                   <select value={statGlobalForm.iconName} onChange={e => setStatGlobalForm({...statGlobalForm, iconName: e.target.value})} className="w-full p-3 border rounded-xl text-sm">
-                                      <option value="TrendingUp">TrendingUp</option>
-                                      <option value="Users">Users</option>
-                                      <option value="Award">Award</option>
-                                      <option value="PieChart">PieChart</option>
-                                   </select>
-                                </div>
-                                <div>
-                                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Ordre</label>
-                                   <input type="number" value={statGlobalForm.order} onChange={e => setStatGlobalForm({...statGlobalForm, order: Number(e.target.value)})} className="w-full p-3 border rounded-xl text-sm" />
-                                </div>
-                             </div>
-                          </>
-                       )}
-
-                       {/* FORM FOR EVOLUTION */}
-                       {successDataType === 'EVOLUTION' && (
-                          <>
-                             <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Année</label>
-                                <input type="text" value={statEvoForm.year} onChange={e => setStatEvoForm({...statEvoForm, year: e.target.value})} className="w-full p-3 border rounded-xl text-sm" placeholder="Ex: 2024" />
-                             </div>
-                             <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Taux (%)</label>
-                                <input type="number" step="0.1" value={statEvoForm.rate} onChange={e => setStatEvoForm({...statEvoForm, rate: Number(e.target.value)})} className="w-full p-3 border rounded-xl text-sm" />
-                             </div>
-                          </>
-                       )}
-
-                       {/* FORM FOR DUT / LP */}
-                       {(successDataType === 'DUT' || successDataType === 'LP') && (
-                          <>
-                             <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Année Académique</label>
-                                <input type="text" value={statCycleForm.year} onChange={e => setStatCycleForm({...statCycleForm, year: e.target.value})} className="w-full p-3 border rounded-xl text-sm" placeholder="Ex: 2023-2024" />
-                             </div>
-                             <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Inscrits</label>
-                                   <input type="number" value={statCycleForm.inscrits} onChange={e => setStatCycleForm({...statCycleForm, inscrits: Number(e.target.value)})} className="w-full p-3 border rounded-xl text-sm" />
-                                </div>
-                                <div>
-                                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Taux de réussite (%)</label>
-                                   <input type="number" step="0.1" max="100" value={statCycleForm.taux} onChange={e => setStatCycleForm({...statCycleForm, taux: Number(e.target.value)})} className="w-full p-3 border rounded-xl text-sm" />
-                                </div>
-                             </div>
-                          </>
-                       )}
-                    </div>
-
-                    <div className="p-6 border-t border-gray-100 bg-gray-50 flex justify-end gap-3 sticky bottom-0 z-10">
-                       <button onClick={() => setIsModalOpen(false)} className="px-5 py-2.5 text-gray-600 font-bold hover:bg-gray-200 rounded-xl transition">Annuler</button>
-                       <button onClick={handleSaveSuccessStat} disabled={isLoadingData} className="px-5 py-2.5 bg-brand-600 text-white font-bold rounded-xl hover:bg-brand-700 shadow-lg transition flex items-center">
-                          {isLoadingData ? <RefreshCw size={18} className="animate-spin mr-2"/> : <Check size={18} className="mr-2" />} Enregistrer
-                       </button>
-                    </div>
-                 </div>
-              </div>
-           )}
-
-           {/* FAQ MODAL */}
-           {isModalOpen && activeAdminSection === 'FAQ' && (
-             <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-               <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200 flex flex-col">
-                 <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50 sticky top-0 z-10">
-                   <h3 className="text-lg font-bold text-gray-900">
-                     {modalMode === 'ADD' ? 'Ajouter FAQ' : 'Modifier FAQ'}
-                   </h3>
-                   <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-200 rounded-full transition-colors">
-                     <X size={24} />
-                   </button>
-                 </div>
-                 
-                 <div className="p-6 space-y-5">
-                   <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                      <div className="md:col-span-1">
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Catégorie</label>
-                        <select 
-                          value={faqFormData.category}
-                          onChange={(e) => setFaqFormData({...faqFormData, category: e.target.value as Category})}
-                          className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none bg-white font-medium"
-                        >
-                          {Object.values(Category).map((cat) => (
-                            <option key={cat} value={cat}>{cat}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="md:col-span-2">
-                         <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Question</label>
-                         <input 
-                           type="text" 
-                           value={faqFormData.question}
-                           onChange={(e) => setFaqFormData({...faqFormData, question: e.target.value})}
-                           className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none font-bold text-gray-900" 
-                         />
-                      </div>
-                   </div>
-
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                      <div>
-                         <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Procédure</label>
-                         <input 
-                           type="text" 
-                           value={faqFormData.procedure}
-                           onChange={(e) => setFaqFormData({...faqFormData, procedure: e.target.value})}
-                           className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none" 
-                         />
-                      </div>
-                      <div>
-                         <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Service</label>
-                         <input 
-                           type="text" 
-                           value={faqFormData.service}
-                           onChange={(e) => setFaqFormData({...faqFormData, service: e.target.value})}
-                           className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none" 
-                         />
-                      </div>
-                   </div>
-                   
-                   <div>
-                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Étapes (Une par ligne)</label>
-                     <textarea 
-                       value={faqFormData.steps}
-                       onChange={(e) => setFaqFormData({...faqFormData, steps: e.target.value})}
-                       rows={5} 
-                       className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none" 
-                     />
-                   </div>
-                 </div>
-
-                 <div className="p-6 border-t border-gray-100 bg-gray-50 flex justify-end gap-3 sticky bottom-0 z-10">
-                   <button onClick={() => setIsModalOpen(false)} className="px-5 py-2.5 text-gray-600 font-bold hover:bg-gray-200 rounded-xl transition">Annuler</button>
-                   <button onClick={handleSaveFaq} disabled={isLoadingData} className="px-5 py-2.5 bg-brand-600 text-white font-bold rounded-xl hover:bg-brand-700 shadow-lg transition flex items-center">
-                     {isLoadingData ? <RefreshCw size={18} className="animate-spin mr-2"/> : <Check size={18} className="mr-2" />} Enregistrer
-                   </button>
-                 </div>
-               </div>
-             </div>
-           )}
-
-           {/* FLOW MODAL */}
-           {isModalOpen && activeAdminSection === 'FLOWS' && (
-              <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-                 <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200 flex flex-col">
-                    <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50 sticky top-0 z-10">
-                       <h3 className="text-lg font-bold text-gray-900">
-                          {modalMode === 'ADD' ? 'Créer Parcours' : 'Éditer Parcours'}
-                       </h3>
-                       <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-200 rounded-full transition-colors">
-                          <X size={24} />
-                       </button>
-                    </div>
-
-                    <div className="p-6 space-y-6">
-                       <div>
-                          <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Titre du Flux</label>
-                          <input 
-                             type="text" 
-                             value={flowFormData.title}
-                             onChange={(e) => setFlowFormData({...flowFormData, title: e.target.value})}
-                             className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none font-bold text-gray-900" 
-                          />
-                       </div>
-
-                       <div>
-                          <div className="flex justify-between items-end mb-2">
-                             <label className="block text-xs font-bold text-gray-500 uppercase">Étapes</label>
-                             <button 
-                                onClick={handleAddFlowStep}
-                                className="text-xs bg-brand-50 text-brand-700 px-3 py-1.5 rounded-lg font-bold hover:bg-brand-100 transition-colors flex items-center"
-                             >
-                                <Plus size={14} className="mr-1" /> Ajouter étape
-                             </button>
-                          </div>
-
-                          <div className="space-y-3 bg-gray-50 p-4 rounded-xl border border-gray-100">
-                             {flowFormData.steps.length === 0 && (
-                                <p className="text-center text-sm text-gray-400 py-4 italic">Aucune étape définie.</p>
-                             )}
-                             
-                             {flowFormData.steps.map((step, idx) => (
-                                <div key={step.id || idx} className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm relative group">
-                                   <div className="absolute top-2 right-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
-                                      <button onClick={() => handleRemoveFlowStep(idx)} className="text-gray-300 hover:text-red-500 p-1"><X size={16} /></button>
-                                   </div>
-                                   
-                                   <div className="flex items-center gap-2 mb-3">
-                                      <span className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center text-xs font-bold text-gray-600">
-                                         {idx + 1}
-                                      </span>
-                                      <input 
-                                         type="text" 
-                                         placeholder="Titre"
-                                         value={step.label}
-                                         onChange={(e) => handleFlowStepChange(idx, 'label', e.target.value)}
-                                         className="flex-1 p-2 border-b border-gray-200 focus:border-brand-500 outline-none text-sm font-bold"
-                                      />
-                                   </div>
-
-                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
-                                      <input 
-                                         type="text" 
-                                         placeholder="Service"
-                                         value={step.service}
-                                         onChange={(e) => handleFlowStepChange(idx, 'service', e.target.value)}
-                                         className="w-full p-2 bg-gray-50 rounded-lg text-xs outline-none focus:ring-1 focus:ring-brand-200"
-                                      />
-                                      <select 
-                                         value={step.icon || 'check-circle'}
-                                         onChange={(e) => handleFlowStepChange(idx, 'icon', e.target.value)}
-                                         className="w-full p-2 bg-gray-50 rounded-lg text-xs outline-none focus:ring-1 focus:ring-brand-200"
-                                      >
-                                         {AVAILABLE_ICONS.map(icon => (
-                                            <option key={icon.value} value={icon.value}>{icon.label}</option>
-                                         ))}
-                                      </select>
-                                   </div>
-                                </div>
-                             ))}
-                          </div>
-                       </div>
-                    </div>
-
-                    <div className="p-6 border-t border-gray-100 bg-gray-50 flex justify-end gap-3 sticky bottom-0 z-10">
-                       <button onClick={() => setIsModalOpen(false)} className="px-5 py-2.5 text-gray-600 font-bold hover:bg-gray-200 rounded-xl transition">Annuler</button>
-                       <button onClick={handleSaveFlow} disabled={isLoadingData} className="px-5 py-2.5 bg-brand-600 text-white font-bold rounded-xl hover:bg-brand-700 shadow-lg transition flex items-center">
-                          {isLoadingData ? <RefreshCw size={18} className="animate-spin mr-2"/> : <Check size={18} className="mr-2" />} Enregistrer
-                       </button>
-                    </div>
-                 </div>
-              </div>
-           )}
-
-            {/* NOTICE MODAL */}
+           {/* NOTICE MODAL */}
            {isModalOpen && activeAdminSection === 'NOTICES' && (
              <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-               <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200 flex flex-col">
+               <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200 flex flex-col">
                  <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50 sticky top-0 z-10">
                    <h3 className="text-lg font-bold text-gray-900">
                      {modalMode === 'ADD' ? 'Publier Note' : 'Modifier Note'}
@@ -1356,6 +1127,7 @@ const Dashboard: React.FC = () => {
                  </div>
                  
                  <div className="p-6 space-y-5">
+                   {/* Meta Data */}
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       <div>
                         <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Catégorie</label>
@@ -1393,28 +1165,117 @@ const Dashboard: React.FC = () => {
                       />
                    </div>
 
-                   <div>
-                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Contenu</label>
-                     <textarea 
-                       value={noticeFormData.content}
-                       onChange={(e) => setNoticeFormData({...noticeFormData, content: e.target.value})}
-                       rows={6} 
-                       className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none" 
-                     />
+                   {/* Toggle Timetable Mode */}
+                   <div className="flex items-center gap-3 py-2 border-b border-gray-100">
+                      <div className="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+                         <input 
+                           type="checkbox" 
+                           name="toggle" 
+                           id="timetableToggle" 
+                           checked={isTimetableMode}
+                           onChange={(e) => {
+                              setIsTimetableMode(e.target.checked);
+                              if(e.target.checked && !noticeFormData.timetable) {
+                                 setNoticeFormData({...noticeFormData, timetable: { level: 'L1', entries: [], note: '', headOfDept: '' }});
+                              }
+                           }}
+                           className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"
+                           style={{right: isTimetableMode ? '0' : 'auto', left: isTimetableMode ? 'auto' : '0', borderColor: isTimetableMode ? '#006064' : '#E5E7EB'}}
+                         />
+                         <label htmlFor="timetableToggle" className={`toggle-label block overflow-hidden h-6 rounded-full cursor-pointer ${isTimetableMode ? 'bg-brand-600' : 'bg-gray-300'}`}></label>
+                      </div>
+                      <label htmlFor="timetableToggle" className="text-sm font-bold text-gray-700">Est-ce un Emploi du Temps ?</label>
                    </div>
 
-                   <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
-                      <div className="flex-1">
-                         <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Fichier (Facultatif)</label>
-                         <input 
-                           type="text" 
-                           value={noticeFormData.fileSize || ''}
-                           onChange={(e) => setNoticeFormData({...noticeFormData, fileSize: e.target.value})}
-                           className="w-full p-2 border border-gray-200 rounded-lg text-sm bg-white" 
-                           placeholder="Ex: 1.2 MB"
-                         />
+                   {isTimetableMode ? (
+                      <div className="space-y-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                         {/* Timetable Controls */}
+                         <div>
+                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Niveau</label>
+                            <select 
+                               value={noticeFormData.timetable?.level || 'L1'}
+                               onChange={(e) => handleTimetableMetaChange('level', e.target.value as any)}
+                               className="w-full md:w-1/3 p-2 border border-gray-200 rounded-lg text-sm bg-white"
+                            >
+                               <option value="L1">Licence 1 (L1)</option>
+                               <option value="L2">Licence 2 (L2)</option>
+                               <option value="L3">Licence 3 (L3)</option>
+                            </select>
+                         </div>
+
+                         {/* Timetable Entries Table */}
+                         <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200 bg-white rounded-lg overflow-hidden shadow-sm">
+                               <thead className="bg-gray-100">
+                                  <tr>
+                                     <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jour</th>
+                                     <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Horaire</th>
+                                     <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ECUE</th>
+                                     <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Filière</th>
+                                     <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Salle</th>
+                                     <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Enseignant</th>
+                                     <th className="px-3 py-2"></th>
+                                  </tr>
+                               </thead>
+                               <tbody className="bg-white divide-y divide-gray-200">
+                                  {noticeFormData.timetable?.entries.map((entry, index) => (
+                                     <tr key={index}>
+                                        <td className="px-2 py-1"><input type="text" value={entry.day} onChange={(e) => handleTimetableChange(index, 'day', e.target.value)} className="w-full text-xs p-1 border rounded" /></td>
+                                        <td className="px-2 py-1"><input type="text" value={entry.time} onChange={(e) => handleTimetableChange(index, 'time', e.target.value)} className="w-full text-xs p-1 border rounded" /></td>
+                                        <td className="px-2 py-1"><input type="text" value={entry.ecue} onChange={(e) => handleTimetableChange(index, 'ecue', e.target.value)} className="w-full text-xs p-1 border rounded" /></td>
+                                        <td className="px-2 py-1"><input type="text" value={entry.filiere} onChange={(e) => handleTimetableChange(index, 'filiere', e.target.value)} className="w-full text-xs p-1 border rounded" /></td>
+                                        <td className="px-2 py-1"><input type="text" value={entry.room} onChange={(e) => handleTimetableChange(index, 'room', e.target.value)} className="w-full text-xs p-1 border rounded" /></td>
+                                        <td className="px-2 py-1"><input type="text" value={entry.teacher} onChange={(e) => handleTimetableChange(index, 'teacher', e.target.value)} className="w-full text-xs p-1 border rounded" /></td>
+                                        <td className="px-2 py-1 text-center">
+                                           <button onClick={() => handleRemoveTimetableRow(index)} className="text-red-500 hover:text-red-700"><Trash2 size={14}/></button>
+                                        </td>
+                                     </tr>
+                                  ))}
+                               </tbody>
+                            </table>
+                         </div>
+                         <button onClick={handleAddTimetableRow} className="text-xs flex items-center text-brand-600 font-bold hover:underline mt-2"><Plus size={14} className="mr-1"/> Ajouter une ligne</button>
+
+                         {/* Footer Fields */}
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                            <div>
+                               <label className="block text-xs font-bold text-gray-500 uppercase mb-1">NB (Note)</label>
+                               <input type="text" value={noticeFormData.timetable?.note || ''} onChange={(e) => handleTimetableMetaChange('note', e.target.value)} className="w-full p-2 border border-gray-200 rounded-lg text-sm" placeholder="Ex: La présence est obligatoire" />
+                            </div>
+                            <div>
+                               <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Chef de Département</label>
+                               <input type="text" value={noticeFormData.timetable?.headOfDept || ''} onChange={(e) => handleTimetableMetaChange('headOfDept', e.target.value)} className="w-full p-2 border border-gray-200 rounded-lg text-sm" placeholder="Nom du responsable" />
+                            </div>
+                         </div>
                       </div>
-                      <div className="flex items-center pt-4">
+                   ) : (
+                      <>
+                        <div>
+                           <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Contenu</label>
+                           <textarea 
+                              value={noticeFormData.content}
+                              onChange={(e) => setNoticeFormData({...noticeFormData, content: e.target.value})}
+                              rows={6} 
+                              className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none" 
+                           />
+                        </div>
+
+                        <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                           <div className="flex-1">
+                              <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Fichier (Facultatif)</label>
+                              <input 
+                                 type="text" 
+                                 value={noticeFormData.fileSize || ''}
+                                 onChange={(e) => setNoticeFormData({...noticeFormData, fileSize: e.target.value})}
+                                 className="w-full p-2 border border-gray-200 rounded-lg text-sm bg-white" 
+                                 placeholder="Ex: 1.2 MB"
+                              />
+                           </div>
+                        </div>
+                      </>
+                   )}
+
+                   <div className="flex items-center pt-2">
                          <input 
                             type="checkbox" 
                             id="isNew"
@@ -1422,8 +1283,7 @@ const Dashboard: React.FC = () => {
                             onChange={(e) => setNoticeFormData({...noticeFormData, isNew: e.target.checked})}
                             className="w-5 h-5 text-brand-600 rounded focus:ring-brand-500 border-gray-300 mr-2"
                          />
-                         <label htmlFor="isNew" className="text-sm font-bold text-gray-700 cursor-pointer select-none">Nouveau</label>
-                      </div>
+                         <label htmlFor="isNew" className="text-sm font-bold text-gray-700 cursor-pointer select-none">Marquer comme Nouveau</label>
                    </div>
                  </div>
 
