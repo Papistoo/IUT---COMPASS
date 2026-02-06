@@ -3,7 +3,7 @@ import React, { useState, useEffect, Suspense, lazy } from 'react';
 import Layout from './components/Layout';
 import InstallPrompt from './components/InstallPrompt';
 import { ViewState } from './types';
-import { RefreshCw, WifiOff } from 'lucide-react';
+import { RefreshCw, WifiOff, Power, Wifi } from 'lucide-react';
 
 // --- LAZY LOADING OPTIMIZATION ---
 // Chargement à la demande des composants pour un démarrage ultra-rapide
@@ -72,6 +72,43 @@ const PageLoader = () => {
 };
 
 const App: React.FC = () => {
+  // --- 0. CONNECTIVITY CHECK ---
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [isCheckingConnection, setIsCheckingConnection] = useState(false);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  const handleRetryConnection = () => {
+    setIsCheckingConnection(true);
+    // Simulation d'une vérification réseau (UX)
+    setTimeout(() => {
+      setIsOnline(navigator.onLine);
+      setIsCheckingConnection(false);
+    }, 1500);
+  };
+
+  const handleQuitApp = () => {
+    // Tentative de fermeture de la fenêtre
+    try {
+      window.close();
+    } catch (e) {
+      console.log("Impossible de fermer la fenêtre via script");
+    }
+    // Fallback pour mobile/PWA : rediriger vers une page blanche ou Google
+    window.location.href = "about:blank";
+  };
+
   // --- 1. STATE INITIALIZATION WITH URL CHECK ---
   const getInitialView = (): ViewState => {
     const params = new URLSearchParams(window.location.search);
@@ -158,6 +195,51 @@ const App: React.FC = () => {
     url.searchParams.set('view', 'HOME');
     window.history.replaceState({ view: 'HOME' }, '', url.toString());
   };
+
+  // --- OFFLINE GUARD ---
+  if (!isOnline) {
+    return (
+      <div className="fixed inset-0 z-[100] bg-white flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-500">
+        <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mb-8 relative">
+           <div className="absolute inset-0 bg-gray-100 rounded-full animate-ping opacity-20"></div>
+           <WifiOff size={40} className="text-gray-400" />
+        </div>
+        
+        <h2 className="text-2xl font-bold text-gray-900 mb-3 font-title">Connexion Interrompue</h2>
+        <p className="text-gray-500 mb-10 max-w-xs leading-relaxed">
+          Impossible de joindre le serveur. Veuillez vérifier votre connexion internet pour continuer.
+        </p>
+
+        <div className="flex flex-col w-full max-w-xs gap-4">
+          <button 
+            onClick={handleRetryConnection}
+            disabled={isCheckingConnection}
+            className="w-full py-4 bg-brand-600 text-white rounded-xl font-bold shadow-lg hover:bg-brand-700 active:scale-95 transition-all flex items-center justify-center disabled:opacity-70 disabled:cursor-wait"
+          >
+            {isCheckingConnection ? (
+              <>
+                <RefreshCw size={20} className="mr-3 animate-spin" />
+                Vérification...
+              </>
+            ) : (
+              <>
+                <Wifi size={20} className="mr-3" />
+                Réessayer
+              </>
+            )}
+          </button>
+
+          <button 
+            onClick={handleQuitApp}
+            className="w-full py-4 bg-gray-50 text-gray-600 rounded-xl font-bold hover:bg-gray-100 active:scale-95 transition-all flex items-center justify-center"
+          >
+            <Power size={20} className="mr-3" />
+            Quitter l'application
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // 1. Walkthrough
   if (currentView === 'WALKTHROUGH') {

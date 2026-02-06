@@ -56,8 +56,8 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, onNavigate, searc
 
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col h-full overflow-hidden relative w-full">
-        {/* Mobile Header - With explicit Safe Area Top Padding and background to prevent overlap */}
-        <header className="md:hidden bg-white border-b border-gray-200 sticky top-0 z-30 pt-[env(safe-area-inset-top)] shadow-sm">
+        {/* Mobile Header - Correction iOS: pt-[env(safe-area-inset-top)] + bg-white assure que le fond de la barre d'état est blanc */}
+        <header className="md:hidden bg-white border-b border-gray-200 sticky top-0 z-40 pt-[env(safe-area-inset-top)] shadow-sm">
           <div className="p-4 flex justify-between items-center h-16">
             <div className="flex items-center gap-3">
                <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center overflow-hidden border border-gray-100 shadow-sm">
@@ -79,7 +79,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, onNavigate, searc
 
         {/* Global Search Bar (Conditional) */}
         {showSearchBar && (
-           <div className="bg-white/90 backdrop-blur-md border-b border-gray-200 p-4 sticky top-0 md:static z-20 animate-in slide-in-from-top-2 duration-200">
+           <div className="bg-white/90 backdrop-blur-md border-b border-gray-200 p-4 sticky top-0 md:static z-30 animate-in slide-in-from-top-2 duration-200">
               <div className="max-w-4xl mx-auto relative">
                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                  <input 
@@ -113,7 +113,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, onNavigate, searc
         </div>
 
         {/* Mobile Bottom Navigation - With Safe Area Bottom Padding */}
-        <nav className="md:hidden bg-white/95 backdrop-blur-lg border-t border-gray-200 flex justify-around p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] sticky bottom-0 z-30 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] w-full">
+        <nav className="md:hidden bg-white/95 backdrop-blur-lg border-t border-gray-200 flex justify-around p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] sticky bottom-0 z-40 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] w-full">
            <button onClick={() => onNavigate('HOME')} className={`flex flex-col items-center p-2 rounded-lg flex-1 ${activeView === 'HOME' ? 'text-brand-600' : 'text-gray-400'}`}>
               <HomeIcon size={24} />
               <span className="text-[10px] mt-1 font-medium">Accueil</span>

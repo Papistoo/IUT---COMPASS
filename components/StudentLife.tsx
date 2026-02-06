@@ -1,7 +1,6 @@
 
-
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Mic2, Bus, Trophy, Play, Users, MapPin, Calendar, Star, Lightbulb, Rocket, Medal, CheckCircle2, Info, CreditCard, Globe, Ticket, Monitor, Percent, GraduationCap, Briefcase, TrendingUp, Truck, Wifi, Database, Megaphone, Layout, Hotel, ChefHat, School, Image as ImageIcon, BookOpen, Download, Shirt, Coffee, Home, HeartPulse, FileText, Compass, AlertCircle, X, Send, Search, User, Maximize2, ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react';
+import { ArrowLeft, Mic2, Bus, Trophy, Play, Users, MapPin, Calendar, Star, Lightbulb, Rocket, Medal, CheckCircle2, Info, CreditCard, Globe, Ticket, Monitor, Percent, GraduationCap, Briefcase, TrendingUp, Truck, Wifi, Database, Megaphone, Layout, Hotel, ChefHat, School, Image as ImageIcon, BookOpen, Download, Shirt, Coffee, Home, HeartPulse, FileText, Compass, AlertCircle, X, Send, Search, User, Maximize2, ChevronLeft, ChevronRight, ZoomIn, Map, Footprints, CornerDownRight, Landmark, Eye, Navigation, Sparkles } from 'lucide-react';
 import { ViewState } from '../types';
 import LazyImage from './LazyImage';
 
@@ -10,7 +9,7 @@ interface StudentLifeProps {
   searchQuery?: string;
 }
 
-type SectionType = 'MAIN' | 'ORATORY' | 'TRIP' | 'FOOTBALL' | 'CONCIT' | 'IDCARD' | 'ACADEMICS' | 'CAMPUS' | 'GUIDE';
+type SectionType = 'MAIN' | 'ORATORY' | 'TRIP' | 'FOOTBALL' | 'CONCIT' | 'IDCARD' | 'ACADEMICS' | 'CAMPUS' | 'GUIDE' | 'LOCATIONS';
 
 const StudentLife: React.FC<StudentLifeProps> = ({ onBack, searchQuery = '' }) => {
   const [activeSection, setActiveSection] = useState<SectionType>('MAIN');
@@ -556,6 +555,42 @@ const StudentLife: React.FC<StudentLifeProps> = ({ onBack, searchQuery = '' }) =
                  </div>
               </div>
            </div>
+
+           {/* --- SECTION VIDÉO ISIC AJOUTÉE --- */}
+           <div className="mt-8 pt-8 border-t border-gray-100">
+              <div className="flex flex-col items-center text-center">
+                 {/* Image d'illustration */}
+                 <div className="mb-6 w-full max-w-xs">
+                    <LazyImage 
+                      src="https://ik.imagekit.io/lfegvix1p/community1__PF0EdVIS.svg" 
+                      alt="Communauté ISIC" 
+                      className="w-full h-auto object-contain drop-shadow-sm"
+                    />
+                 </div>
+
+                 {/* Titre et Paragraphe */}
+                 <h3 className="text-lg font-bold text-gray-900 mb-2">Une communauté mondiale</h3>
+                 <p className="text-sm text-gray-600 mb-6 max-w-lg leading-relaxed">
+                    Rejoignez des millions d'étudiants à travers le monde. Découvrez en vidéo comment la carte ISIC facilite votre vie quotidienne et vos voyages.
+                 </p>
+
+                 {/* Lecteur Vidéo YouTube */}
+                 <div className="w-full rounded-2xl overflow-hidden shadow-lg border border-gray-200 aspect-video bg-black relative">
+                    <iframe 
+                      width="100%" 
+                      height="100%" 
+                      src="https://www.youtube.com/embed/7U1W8jPaPr0" 
+                      title="Présentation Carte ISIC" 
+                      frameBorder="0" 
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                      allowFullScreen
+                      className="absolute inset-0"
+                    ></iframe>
+                 </div>
+              </div>
+           </div>
+           {/* --- FIN SECTION VIDÉO --- */}
+
         </div>
       </div>
     </div>
@@ -1083,7 +1118,7 @@ const StudentLife: React.FC<StudentLifeProps> = ({ onBack, searchQuery = '' }) =
                    Le Parcours de la Réussite
                 </h3>
                 <span className="text-[10px] bg-brand-50 text-brand-600 px-2 py-1 rounded-full font-bold animate-pulse">
-                   Cliquez sur les étapes
+                   Cliquez les étapes
                 </span>
              </div>
              
@@ -1314,8 +1349,131 @@ const StudentLife: React.FC<StudentLifeProps> = ({ onBack, searchQuery = '' }) =
     );
   };
 
+  // 9. NEW SECTION: LOCALISATION SERVICES
+  const renderLocations = () => {
+    const locationFlows = [
+      {
+        id: 'DIR_IUT',
+        question: "Où se situe la direction de IUT de Tahoua ?",
+        answer: "La direction de IUT de Tahoua se situe dans le campus 1 de l'université juste à l'entrée de la porte, sortir à droite à peu près 10m en haut du bâtiment vous verrez écrit Institut Universitaire de Technologie.",
+        steps: [
+          { icon: MapPin, label: "Campus 1 (Entrée principale)" },
+          { icon: CornerDownRight, label: "Tourner à droite après le portail" },
+          { icon: Footprints, label: "Avancer environ 10 mètres" },
+          { icon: Eye, label: "Regarder en haut : Enseigne 'Institut Universitaire de Technologie'" },
+          { icon: Star, label: "Arrivée : Direction IUT" }
+        ]
+      },
+      {
+        id: 'RECTORAT',
+        question: "Où se situe le rectorat ?",
+        answer: "Le rectorat se situe dans le campus 1 de l'université et non loin de la direction de IUT.",
+        steps: [
+          { icon: MapPin, label: "Campus 1 (Même enceinte)" },
+          { icon: Compass, label: "Repérer la Direction IUT" },
+          { icon: Footprints, label: "Continuer à proximité immédiate" },
+          { icon: Landmark, label: "Arrivée : Rectorat" }
+        ]
+      }
+    ];
+
+    return (
+      <div className="animate-in slide-in-from-right duration-500 space-y-8 pb-24">
+        {/* Header Image */}
+        <div className="w-full h-48 md:h-64 rounded-3xl overflow-hidden shadow-lg border border-gray-100 relative">
+           <LazyImage 
+              src="https://ik.imagekit.io/lfegvix1p/Cours_pR5bDOPMu.svg"
+              alt="Plan Campus"
+              className="w-full h-full object-cover"
+              containerClassName="w-full h-full"
+           />
+           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-6">
+              <div>
+                 <h2 className="text-2xl font-bold text-white font-title mb-1">Localisation des Services</h2>
+                 <p className="text-white/80 text-sm">Guide d'orientation pour les nouveaux venus.</p>
+              </div>
+           </div>
+        </div>
+
+        {/* Q&A Accordion Style */}
+        <div className="space-y-6">
+           {locationFlows.map((flow) => (
+              <div key={flow.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                 <div className="p-6 border-b border-gray-50 bg-brand-50/30">
+                    <h3 className="font-bold text-gray-900 text-lg flex items-start">
+                       <Map className="mr-3 text-brand-600 flex-shrink-0 mt-1" size={20} />
+                       {flow.question}
+                    </h3>
+                    <p className="text-gray-600 mt-2 text-sm leading-relaxed ml-8">
+                       {flow.answer}
+                    </p>
+                 </div>
+                 
+                 {/* Visual Flow Representation */}
+                 <div className="p-6 bg-white relative">
+                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-6 ml-8">Itinéraire Visuel</h4>
+                    
+                    <div className="relative ml-4">
+                       {/* Vertical Line */}
+                       <div className="absolute left-4 top-2 bottom-6 w-0.5 bg-gray-200"></div>
+
+                       <div className="space-y-6">
+                          {flow.steps.map((step, idx) => (
+                             <div key={idx} className="relative flex items-center group">
+                                {/* Circle Step */}
+                                <div className={`z-10 flex items-center justify-center w-8 h-8 rounded-full border-2 ${idx === flow.steps.length - 1 ? 'bg-green-100 border-green-500 text-green-600' : 'bg-white border-brand-200 text-brand-500'} shadow-sm`}>
+                                   <step.icon size={14} />
+                                </div>
+                                {/* Label */}
+                                <div className="ml-4 p-3 rounded-xl bg-gray-50 border border-gray-100 text-sm font-medium text-gray-700 flex-1 group-hover:bg-brand-50 group-hover:border-brand-100 transition-colors">
+                                   {step.label}
+                                </div>
+                             </div>
+                          ))}
+                       </div>
+                    </div>
+                 </div>
+              </div>
+           ))}
+        </div>
+
+        {/* --- COMING SOON CARD (NOUVEAU) --- */}
+        <div className="relative mt-8 overflow-hidden rounded-2xl bg-slate-900 p-8 shadow-xl border border-slate-700 group">
+            {/* Décoration Blueprint en Arrière-plan */}
+            <div className="absolute inset-0 bg-grid-white/[0.05] [mask-image:linear-gradient(0deg,transparent,black)]"></div>
+            <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-brand-500/20 blur-3xl transition-all duration-500 group-hover:bg-brand-500/30"></div>
+            <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-blue-500/20 blur-3xl transition-all duration-500 group-hover:bg-blue-500/30"></div>
+
+            <div className="relative z-10 flex flex-col md:flex-row items-center gap-6 text-center md:text-left">
+                {/* Icône Stylisée */}
+                <div className="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-md shadow-inner border border-white/10 group-hover:scale-105 transition-transform duration-300">
+                    <Navigation size={32} className="text-brand-400" />
+                    <div className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-red-500 animate-pulse"></div>
+                </div>
+
+                {/* Contenu Texte */}
+                <div>
+                    <div className="mb-2 flex items-center justify-center md:justify-start gap-2">
+                        <h3 className="text-xl font-bold font-title text-white">Cartographie Intégrale</h3>
+                        <span className="rounded-full bg-brand-500/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-300 border border-brand-500/30 flex items-center">
+                           <Sparkles size={10} className="mr-1" /> Bientôt
+                        </span>
+                    </div>
+                    <p className="text-sm leading-relaxed text-slate-400 max-w-lg">
+                        Nous développons actuellement une carte interactive complète incluant la <strong>Scolarité</strong>, la <strong>Bibliothèque</strong>, l'<strong>Infirmerie</strong> et tous les départements. 
+                        Visualisez les flux réels et photos de chaque bâtiment à la prochaine mise à jour.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+      </div>
+    );
+  };
+
   // --- MENU DATA FOR FILTERING ---
   const menuItems = [
+    { id: 'LOCATIONS', title: 'Localisation Services', desc: 'Trouver la Direction, le Rectorat et autres services.', icon: Map, color: 'text-red-600', bg: 'bg-red-50', border: 'hover:border-red-300' },
     { id: 'ORATORY', title: 'Art Oratoire', desc: 'Développez votre éloquence et débattez.', icon: Mic2, color: 'text-purple-600', bg: 'bg-purple-50', border: 'hover:border-purple-300' },
     { id: 'TRIP', title: 'Voyages d\'Étude', desc: 'Visites d\'entreprises et sorties terrain.', icon: Bus, color: 'text-sky-600', bg: 'bg-sky-50', border: 'hover:border-sky-300' },
     { id: 'FOOTBALL', title: 'Club Football', desc: 'Coupe du Directeur et matchs inter-filières.', icon: Trophy, color: 'text-green-600', bg: 'bg-green-50', border: 'hover:border-green-300' },
@@ -1398,6 +1556,7 @@ const StudentLife: React.FC<StudentLifeProps> = ({ onBack, searchQuery = '' }) =
        </button>
        
        <div className="flex-1 pb-20"> {/* Standard flex item, let Layout handle overflow */}
+          {activeSection === 'LOCATIONS' && renderLocations()}
           {activeSection === 'ORATORY' && renderOratory()}
           {activeSection === 'TRIP' && renderTrip()}
           {activeSection === 'FOOTBALL' && renderFootball()}

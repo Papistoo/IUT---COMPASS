@@ -22,7 +22,7 @@
     
     <!-- iOS Support -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <!-- CHANGEMENT ICI : 'default' assure que la barre ne se superpose pas mal et reste lisible (noir sur blanc) -->
+    <!-- CHANGEMENT ICI : 'default' est correct, mais le CSS color-scheme est vital pour le contraste -->
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="IUT-COMPASS" />
     <link rel="apple-touch-icon" href="https://udh.edu.ne/public/img/university/uploads/domains/1721405330.jpg" />
@@ -92,6 +92,9 @@
         --sab: env(safe-area-inset-bottom, 0px);
         --sal: env(safe-area-inset-left, 0px);
         --sar: env(safe-area-inset-right, 0px);
+        
+        /* CORRECTIF IOS CRITIQUE : Force le mode clair pour avoir du texte NOIR dans la barre d'état blanche */
+        color-scheme: light; 
       }
 
       html, body {
