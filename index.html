@@ -4,8 +4,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover" />
-    <!-- CHANGEMENT ICI : Couleur blanche pour que les icones système (heure/batterie) passent en noir -->
-    <meta name="theme-color" content="#ffffff" />
+    <!-- CHANGEMENT: Couleur sombre pour correspondre au nouvel en-tête mobile -->
+    <meta name="theme-color" content="#006064" />
     <title>IUT-COMPASS | IUT de Tahoua</title>
     <meta name="description" content="Plateforme numérique de l'IUT de Tahoua" />
     
@@ -22,8 +22,8 @@
     
     <!-- iOS Support -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <!-- CHANGEMENT ICI : 'default' est correct, mais le CSS color-scheme est vital pour le contraste -->
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <!-- CHANGEMENT: 'black-translucent' permet au fond sombre de l'en-tête de passer sous la barre d'état, assurant un texte blanc lisible -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="IUT-COMPASS" />
     <link rel="apple-touch-icon" href="https://udh.edu.ne/public/img/university/uploads/domains/1721405330.jpg" />
     
@@ -93,7 +93,7 @@
         --sal: env(safe-area-inset-left, 0px);
         --sar: env(safe-area-inset-right, 0px);
         
-        /* CORRECTIF IOS CRITIQUE : Force le mode clair pour avoir du texte NOIR dans la barre d'état blanche */
+        /* CORRECTIF : Mode clair activé par défaut */
         color-scheme: light; 
       }
 
@@ -110,7 +110,6 @@
         overscroll-behavior-y: none;
         min-height: 100dvh;
         
-        /* OPTIMISATION CRITIQUE : Supprime le délai de 300ms au clic sur mobile */
         touch-action: manipulation; 
         
         /* Lissage des polices */

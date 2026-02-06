@@ -56,20 +56,20 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, onNavigate, searc
 
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col h-full overflow-hidden relative w-full">
-        {/* Mobile Header - Correction iOS: pt-[env(safe-area-inset-top)] + bg-white assure que le fond de la barre d'état est blanc */}
-        <header className="md:hidden bg-white border-b border-gray-200 sticky top-0 z-40 pt-[env(safe-area-inset-top)] shadow-sm">
+        {/* Mobile Header - Modifié en fond sombre pour garantir la visibilité de la Status Bar */}
+        <header className="md:hidden bg-brand-900 border-b border-brand-800 sticky top-0 z-40 pt-[env(safe-area-inset-top)] shadow-md">
           <div className="p-4 flex justify-between items-center h-16">
             <div className="flex items-center gap-3">
-               <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center overflow-hidden border border-gray-100 shadow-sm">
+               <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center overflow-hidden border border-brand-800 shadow-sm">
                   <img src="https://udh.edu.ne/public/img/university/uploads/domains/1721405330.jpg" alt="Logo IUT" className="w-full h-full object-cover" />
                </div>
-               <h1 className="text-lg font-bold text-brand-900">IUT-COMPASS</h1>
+               <h1 className="text-lg font-bold text-white tracking-tight">IUT-COMPASS</h1>
             </div>
 
             {/* SEARCH ICON - GLOBAL SHORTCUT */}
             <button 
                onClick={() => onNavigate('ASSISTANT')}
-               className="p-2.5 bg-gray-50 text-gray-500 rounded-full hover:bg-brand-50 hover:text-brand-600 transition-all active:scale-95 border border-transparent hover:border-brand-100"
+               className="p-2.5 bg-brand-800 text-brand-100 rounded-full hover:bg-brand-700 hover:text-white transition-all active:scale-95 border border-brand-700"
                aria-label="Recherche globale"
             >
                <Search size={20} />
@@ -79,7 +79,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeView, onNavigate, searc
 
         {/* Global Search Bar (Conditional) */}
         {showSearchBar && (
-           <div className="bg-white/90 backdrop-blur-md border-b border-gray-200 p-4 sticky top-0 md:static z-30 animate-in slide-in-from-top-2 duration-200">
+           <div className="bg-white/95 backdrop-blur-md border-b border-gray-200 p-4 sticky top-0 md:static z-30 animate-in slide-in-from-top-2 duration-200">
               <div className="max-w-4xl mx-auto relative">
                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                  <input 
